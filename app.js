@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-const date = require(__dirname + "/date.js");
+
+
+const mongoose = require("mongoose");
 
 
 
@@ -16,21 +18,65 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 
-let items = [];
-let workItems = [];
+
+
+mongoose.connect("mongodb://localhost:27017/todoDB");
+
+const itemSchema ={
+  name : String
+};
+
+const item = mongoose.model("item", itemSchema);
+
+const item1 = new item ({
+  name : "Welcome to your to do list!"
+});
+const item2 = new item ({
+  name : "Press the + button to add the item"
+});
+const item3 = new item ({
+  name : "<-- Hit this to cross out the item."
+})
+
+const arr = [ item1, item2, item3];
+/*
+item.insertMany(arr, function(err){
+  if(err){
+    console.log(err);
+
+  }
+  else{
+    console.log("Items added to DB!");
+  }
+});
+*/
+
+
 
 
 
 app.get("/", function(req, res) {
 
-  let now = date.getDate();
+  item.find({}, function(err, result){
+    if(err){
+      console.log(err);
   
-  res.render("list", {
-    listTitle: now,
-    newListItems: items
-  });
+    }
+    else{
+
+      res.render("list", {
+        listTitle: "Today",
+        newListItems: result
+      });
+
+      
+    }
+  })
 
 });
+
+
+
 
 app.post("/", function(req, res) {
   var item = req.body.newItem;
@@ -43,7 +89,9 @@ app.post("/", function(req, res) {
     items.push(item);
     res.redirect("/");
   }
-})
+});
+
+
 
 
 
@@ -59,6 +107,7 @@ app.get("/work", function(req, res) {
 app.post("/work", function(req, res) {
   res.redirect("/work");
 })
+
 
 app.get("/about", function(req,res){
   res.render('about');
