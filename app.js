@@ -7,6 +7,7 @@ const app = express();
 
 
 const mongoose = require("mongoose");
+const { response } = require('express');
 
 
 
@@ -26,7 +27,17 @@ const itemSchema ={
   name : String
 };
 
+const listSchema = {
+  name : String,
+  items : [itemSchema]
+};
+
+
+
 const item = mongoose.model("item", itemSchema);
+
+const list = mongoose.model("list", listSchema);
+
 
 
 
@@ -80,15 +91,26 @@ app.get("/", function(req, res) {
 
 app.post("/", function(req, res) {
   const itemName =  req.body.newItem;
+  const listName = req.body.list;
 
   const user_item  =new item({
     name: itemName,
 
   });
 
-  user_item.save();
-  
-  res.redirect("/");
+
+  if(listName === "Today"){
+    user_item.save();
+    res.redirect("/");
+  }
+  else{
+    list.findOne({name: listName}, function(err, foundList){
+      foundList.items.push(user_item);
+      foundList.save();
+      res.redirect("/" + listName);
+
+    })
+  }
   
 });
 
@@ -112,15 +134,45 @@ app.post("/delete", function(req,res){
 
 
 
+app.get("/:customListName", function(req,res){
+
+  const listName = req.params.customListName;
 
 
+  list.findOne({name: listName}, function(err, foundList){
+    if(!err){
+      if(!foundList){
+        const new_list = new list({
+          name: listName,
+          items: arr
+        });
+        
+        
+        new_list.save();
 
-app.get("/work", function(req, res) {
-  res.render("list", {
-    listTitle: "Work List",
-    newListItems: workItems
+        res.redirect("/" + listName);
+        
+      
+      }
+      else{
+        res.render("list", {
+          listTitle: foundList.name,
+          newListItems : foundList.items
+        });
+      }
+    }
+    else{
+      console.log(err);
+    }
   });
-})
+
+  
+
+});
+
+
+
+
 
 
 
