@@ -28,6 +28,8 @@ const itemSchema ={
 
 const item = mongoose.model("item", itemSchema);
 
+
+
 const item1 = new item ({
   name : "Welcome to your to do list!"
 });
@@ -39,18 +41,6 @@ const item3 = new item ({
 })
 
 const arr = [ item1, item2, item3];
-/*
-item.insertMany(arr, function(err){
-  if(err){
-    console.log(err);
-
-  }
-  else{
-    console.log("Items added to DB!");
-  }
-});
-*/
-
 
 
 
@@ -58,9 +48,19 @@ item.insertMany(arr, function(err){
 app.get("/", function(req, res) {
 
   item.find({}, function(err, result){
-    if(err){
-      console.log(err);
-  
+    if(result.length === 0){
+      item.insertMany(arr, function(err){
+        if(err){
+          console.log(err);
+      
+        }
+        else{
+          console.log("Items added to DB!");
+        }
+      });
+      res.redirect("/");
+
+        
     }
     else{
 
@@ -79,17 +79,37 @@ app.get("/", function(req, res) {
 
 
 app.post("/", function(req, res) {
-  var item = req.body.newItem;
+  const itemName =  req.body.newItem;
 
-  if (req.body.list === "Work") {
-    workItems.push(item);
-    res.redirect("/work");
+  const user_item  =new item({
+    name: itemName,
 
-  } else {
-    items.push(item);
-    res.redirect("/");
-  }
+  });
+
+  user_item.save();
+  
+  res.redirect("/");
+  
 });
+
+
+app.post("/delete", function(req,res){
+   const user_del = req.body.checkbox
+
+  item.findByIdAndRemove(user_del, function(err){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log(" Deleted from DB");
+
+    }
+  });
+
+  res.redirect("/");
+
+});
+
 
 
 
@@ -118,3 +138,5 @@ app.listen(3000, function() {
   console.log("Server up and running in PORT:3000");
 
 });
+
+
