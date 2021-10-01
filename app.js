@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
+const  _ = require('lodash');
+
 
 
 const mongoose = require("mongoose");
@@ -116,19 +118,39 @@ app.post("/", function(req, res) {
 
 
 app.post("/delete", function(req,res){
-   const user_del = req.body.checkbox
+  const user_del = req.body.checkbox;
 
-  item.findByIdAndRemove(user_del, function(err){
-    if(err){
-      console.log(err);
-    }
-    else{
-      console.log(" Deleted from DB");
+  const listName = req.body.listName;
 
-    }
-  });
+  if(listName === "Today"){
+    item.findByIdAndRemove(user_del, function(err){
+      if(err){
+        console.log(err);
+      }
+      else{
+        console.log(" Deleted from DB");
+  
+      }
+    });
+  
+    res.redirect("/");
 
-  res.redirect("/");
+  }
+  else{
+
+    list.findOneAndUpdate({name : listName},{$pull : {items :{ _id : user_del}}},function(err,found){
+      if(!err){
+        res.redirect("/"+ listName);
+        console.log("Del from list DB");
+      }
+    })
+
+  }
+
+
+
+
+  
 
 });
 
@@ -136,7 +158,7 @@ app.post("/delete", function(req,res){
 
 app.get("/:customListName", function(req,res){
 
-  const listName = req.params.customListName;
+  const listName = _.capitalize(req.params.customListName) ;
 
 
   list.findOne({name: listName}, function(err, foundList){
